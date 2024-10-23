@@ -1,9 +1,9 @@
 <?php
 /**
- * PHP Benchmark Script for the Command Line with Plain Text Output
+ * PHP Benchmark Script for Command Line and Web with Enhanced Output
  *
  * This script benchmarks the CPU, memory, and IO performance of the server.
- * It provides real-time progress updates and formats the results for easy comparison.
+ * It provides clear and consistent results suitable for both command-line and web environments.
  */
 
 /**
@@ -27,6 +27,26 @@ function flushOutput()
 	flush();
 }
 
+// Detect if the script is run via CLI or web
+$is_cli = (php_sapi_name() === 'cli');
+
+if (!$is_cli) {
+	// If run via web, set header to plain text
+	header('Content-Type: text/plain');
+}
+
+// Output header with date and PHP configuration
+echo "PHP Benchmark Results\n";
+echo "=====================\n\n";
+
+echo "Date: " . date('Y-m-d H:i:s') . "\n";
+echo "PHP Version: " . phpversion() . "\n";
+echo "Execution Time Limit: " . ini_get('max_execution_time') . " seconds\n";
+echo "Memory Limit: " . ini_get('memory_limit') . "\n";
+echo "Operating System: " . php_uname('s') . " " . php_uname('r') . "\n\n";
+
+flushOutput();
+
 /**
  * CPU Benchmark: Calculate the Fibonacci sequence recursively.
  *
@@ -35,9 +55,6 @@ function flushOutput()
  */
 function cpuBenchmark($iterations = 30)
 {
-	echo "Starting CPU Benchmark...\n";
-	flushOutput();
-
 	/**
 	 * Recursive function to calculate Fibonacci numbers.
 	 *
@@ -57,9 +74,6 @@ function cpuBenchmark($iterations = 30)
 
 	$duration_ms = ($end - $start) * 1000;
 
-	echo "CPU Benchmark Completed.\n";
-	flushOutput();
-
 	return [
 		'result' => $result,
 		'time_ms' => $duration_ms
@@ -67,38 +81,25 @@ function cpuBenchmark($iterations = 30)
 }
 
 /**
- * Memory Benchmark: Create and manipulate a large array with progress updates.
+ * Memory Benchmark: Create and manipulate a large array.
  *
  * @return array The peak memory used in MB and the time taken in milliseconds.
  */
 function memoryBenchmark()
 {
-	echo "Starting Memory Benchmark...\n";
-	flushOutput();
-
 	// Force garbage collection to clear memory
 	gc_collect_cycles();
 
 	$startMemory = memory_get_peak_usage(true);
 	$startTime = getTime();
 
-	// Create a large array with progress updates
+	// Create a large array
 	$array = [];
 	$totalIterations = 100000;
-	$progressInterval = 20000; // Update every 20,000 iterations
 
 	for ($i = 0; $i < $totalIterations; $i++) {
 		$array[] = md5($i);
-
-		// Provide progress updates
-		if (($i + 1) % $progressInterval == 0) {
-			echo "  - Memory Benchmark Progress: " . ($i + 1) . "/{$totalIterations} items created.\n";
-			flushOutput();
-		}
 	}
-
-	echo "Sorting the array...\n";
-	flushOutput();
 
 	// Manipulate the array
 	sort($array);
@@ -109,9 +110,6 @@ function memoryBenchmark()
 	$memory_used_mb = ($endMemory - $startMemory) / (1024 * 1024);
 	$duration_ms = ($endTime - $startTime) * 1000;
 
-	echo "Memory Benchmark Completed.\n";
-	flushOutput();
-
 	return [
 		'memory_used_mb' => $memory_used_mb,
 		'time_ms' => $duration_ms
@@ -119,47 +117,29 @@ function memoryBenchmark()
 }
 
 /**
- * IO Benchmark: Write and read a large file with progress updates.
+ * IO Benchmark: Write and read a large file.
  *
  * @param string $filename The name of the temporary file.
  * @return array Bytes written, write time, and read time in milliseconds.
  */
 function ioBenchmark($filename = 'benchmark_test_file.tmp')
 {
-	echo "Starting IO Benchmark...\n";
-	flushOutput();
-
 	$data = str_repeat("The quick brown fox jumps over the lazy dog.\n", 10000); // approx. 450KB
 
 	// Write to file
-	echo "  - Writing data to file...\n";
-	flushOutput();
 	$startWrite = getTime();
 	$bytesWritten = file_put_contents($filename, $data);
 	$endWrite = getTime();
 	$write_duration_ms = ($endWrite - $startWrite) * 1000;
-	echo "  - Data written successfully.\n";
-	flushOutput();
 
 	// Read from file
-	echo "  - Reading data from file...\n";
-	flushOutput();
 	$startRead = getTime();
 	$readData = file_get_contents($filename);
 	$endRead = getTime();
 	$read_duration_ms = ($endRead - $startRead) * 1000;
-	echo "  - Data read successfully.\n";
-	flushOutput();
 
 	// Delete the file
-	echo "  - Deleting temporary file...\n";
-	flushOutput();
 	unlink($filename);
-	echo "  - Temporary file deleted.\n";
-	flushOutput();
-
-	echo "IO Benchmark Completed.\n";
-	flushOutput();
 
 	return [
 		'bytes_written' => $bytesWritten,
@@ -168,21 +148,12 @@ function ioBenchmark($filename = 'benchmark_test_file.tmp')
 	];
 }
 
-// Execute the benchmarks with progress updates
-echo "PHP Benchmark Results\n";
-echo "=====================\n\n";
-flushOutput();
-
-$cpu = cpuBenchmark(30); // Adjusted to 30 iterations
-echo "\n";
-
+// Execute benchmarks
+$cpu = cpuBenchmark(30);
 $memory = memoryBenchmark();
-echo "\n";
-
 $io = ioBenchmark();
-echo "\n";
 
-// Summary of the results in plain text
+// Output the summary in plain text
 echo "Summary\n";
 echo "=======\n";
 echo "CPU Benchmark:\n";
