@@ -53,7 +53,7 @@ flushOutput();
  * @param int $iterations The Fibonacci number to calculate.
  * @return array The result and time taken in milliseconds.
  */
-function cpuBenchmark($iterations = 30)
+function cpuBenchmark($iterations = 35) // Increased to 35
 {
 	/**
 	 * Recursive function to calculate Fibonacci numbers.
@@ -95,7 +95,7 @@ function memoryBenchmark()
 
 	// Create a large array
 	$array = [];
-	$totalIterations = 100000;
+	$totalIterations = 1000000; // Increased to 1,000,000
 
 	for ($i = 0; $i < $totalIterations; $i++) {
 		$array[] = md5($i);
@@ -120,11 +120,12 @@ function memoryBenchmark()
  * IO Benchmark: Write and read a large file.
  *
  * @param string $filename The name of the temporary file.
- * @return array Bytes written, write time, and read time in milliseconds.
+ * @return array MB Written, write time, and read time in milliseconds.
  */
 function ioBenchmark($filename = 'benchmark_test_file.tmp')
 {
-	$data = str_repeat("The quick brown fox jumps over the lazy dog.\n", 10000); // approx. 450KB
+	// Increased data size to approximately 100 MB
+	$data = str_repeat("The quick brown fox jumps over the lazy dog.\n", 2000000); // approx. 100 MB
 
 	// Write to file
 	$startWrite = getTime();
@@ -141,15 +142,21 @@ function ioBenchmark($filename = 'benchmark_test_file.tmp')
 	// Delete the file
 	unlink($filename);
 
+	// Convert bytes to megabytes
+	$mbWritten = $bytesWritten / (1024 * 1024);
+
 	return [
-		'bytes_written' => $bytesWritten,
+		'mb_written' => $mbWritten,
 		'write_time_ms' => $write_duration_ms,
 		'read_time_ms' => $read_duration_ms
 	];
 }
 
 // Execute benchmarks
-$cpu = cpuBenchmark(30);
+echo "Executing benchmarks, please wait...\n\n";
+flushOutput();
+
+$cpu = cpuBenchmark(35);
 $memory = memoryBenchmark();
 $io = ioBenchmark();
 
@@ -157,7 +164,7 @@ $io = ioBenchmark();
 echo "Summary\n";
 echo "=======\n";
 echo "CPU Benchmark:\n";
-echo "  - Fibonacci(30) = {$cpu['result']}\n";
+echo "  - Fibonacci(35) = {$cpu['result']}\n";
 echo "  - Duration: " . number_format($cpu['time_ms'], 2) . " ms\n\n";
 
 echo "Memory Benchmark:\n";
@@ -165,6 +172,6 @@ echo "  - Peak Memory Used: " . number_format($memory['memory_used_mb'], 2) . " 
 echo "  - Duration: " . number_format($memory['time_ms'], 2) . " ms\n\n";
 
 echo "IO Benchmark:\n";
-echo "  - Bytes Written: {$io['bytes_written']} bytes\n";
+echo "  - Data Written: " . number_format($io['mb_written'], 2) . " MB\n";
 echo "  - Write Duration: " . number_format($io['write_time_ms'], 2) . " ms\n";
 echo "  - Read Duration: " . number_format($io['read_time_ms'], 2) . " ms\n";
